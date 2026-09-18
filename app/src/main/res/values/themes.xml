@@ -1,4 +1,8 @@
 <resources>
+    <style name="Theme.OCRAnswerWiz" parent="Theme.Material3.DayNight.NoActionBar" />
 
-    <style name="Theme.OCRAnswerWiz" parent="Theme.MaterialComponents.Light" />
+    <style name="Theme.OCRAnswerWiz.Cropper" parent="Theme.Material3.DayNight">
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+    </style>
 </resources>

@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
     implementation(libs.mlkit.text.recognition)
+    implementation(libs.androidImageCropper)
     implementation(libs.generativeai)
     implementation(libs.coil.compose)
     implementation(libs.converter.moshi)

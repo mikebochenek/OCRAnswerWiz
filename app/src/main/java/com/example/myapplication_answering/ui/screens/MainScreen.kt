@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.AddAPhoto
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Crop
 import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -32,6 +33,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.myapplication_answering.ocr.OcrResult
 import com.example.myapplication_answering.viewmodel.MainViewModel
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -52,17 +57,47 @@ fun MainScreen(viewModel: MainViewModel) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     var tempUri by remember { mutableStateOf<Uri?>(null) }
 
+    val cropImageLauncher = rememberLauncherForActivityResult(
+        contract = CropImageContract()
+    ) { result ->
+        if (result.isSuccessful) {
+            viewModel.onImageSelected(result.uriContent)
+        }
+    }
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        viewModel.onImageSelected(uri)
+        if (uri != null) {
+            cropImageLauncher.launch(
+                CropImageContractOptions(
+                    uri = uri,
+                    cropImageOptions = CropImageOptions(
+                        guidelines = CropImageView.Guidelines.ON,
+                        activityTitle = "Crop Question",
+                        showProgressBar = true
+                    )
+                )
+            )
+        }
     }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            viewModel.onImageSelected(tempUri)
+            tempUri?.let { uri ->
+                cropImageLauncher.launch(
+                    CropImageContractOptions(
+                        uri = uri,
+                        cropImageOptions = CropImageOptions(
+                            guidelines = CropImageView.Guidelines.ON,
+                            activityTitle = "Crop Question",
+                            showProgressBar = true
+                        )
+                    )
+                )
+            }
         }
     }
 
@@ -113,30 +148,59 @@ fun MainScreen(viewModel: MainViewModel) {
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Button(onClick = {
-                                photoPickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            }) {
+                            Button(
+                                onClick = {
+                                    photoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
                                 Icon(Icons.Rounded.PhotoLibrary, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Gallery")
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Gallery", maxLines = 1)
                             }
 
-                            Button(onClick = {
-                                if (cameraPermissionState.status.isGranted) {
-                                    val uri = createTempImageUri(context)
-                                    tempUri = uri
-                                    cameraLauncher.launch(uri)
-                                } else {
-                                    cameraPermissionState.launchPermissionRequest()
-                                }
-                            }) {
+                            Button(
+                                onClick = {
+                                    if (cameraPermissionState.status.isGranted) {
+                                        val uri = createTempImageUri(context)
+                                        tempUri = uri
+                                        cameraLauncher.launch(uri)
+                                    } else {
+                                        cameraPermissionState.launchPermissionRequest()
+                                    }
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
                                 Icon(Icons.Rounded.AddAPhoto, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Camera")
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Camera", maxLines = 1)
+                            }
+
+                            if (imageUri != null) {
+                                OutlinedButton(
+                                    onClick = {
+                                        cropImageLauncher.launch(
+                                            CropImageContractOptions(
+                                                uri = imageUri,
+                                                cropImageOptions = CropImageOptions(
+                                                    guidelines = CropImageView.Guidelines.ON,
+                                                    activityTitle = "Crop Question",
+                                                    showProgressBar = true
+                                                )
+                                            )
+                                        )
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(Icons.Rounded.Crop, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Crop", maxLines = 1)
+                                }
                             }
                         }
 

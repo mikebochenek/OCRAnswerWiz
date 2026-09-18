@@ -42,9 +42,10 @@ okhttp = "4.10.0"
 moshiKotlin = "1.15.2"
 moshiKotlinCodegen = "1.15.2"
 datastorePreferences = "1.1.7"
-material = "1.4.+"
+material = "1.12.0"
 mlkitTextRecognition = "16.0.1"
 generativeai = "0.9.0"
+androidImageCropper = "4.5.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -98,6 +99,7 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitTextRecognition" }
 generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
+androidImageCropper = { group = "com.github.CanHub", name = "Android-Image-Cropper", version.ref = "androidImageCropper" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
