@@ -429,7 +429,7 @@ fun AppStatusCard(answerCount: Int, modifier: Modifier = Modifier) {
 fun MainScreenAdaptivePreview() {
     com.example.myapplication_answering.ui.theme.OCRAnswerWizTheme {
         Surface {
-            Box(androidx.compose.ui.Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Adaptive Layout Preview (Tablet)")
             }
         }
