@@ -1,4 +1,7 @@
 import java.util.Properties
+import java.util.Date
+import java.util.Locale
+import java.text.SimpleDateFormat
 
 plugins {
     alias(libs.plugins.android.application)
@@ -29,6 +32,9 @@ android {
         }
         val geminiApiKey = properties.getProperty("GEMINI_API_KEY") ?: ""
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+        
+        val buildTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date())
+        buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
     }
 
     buildTypes {
