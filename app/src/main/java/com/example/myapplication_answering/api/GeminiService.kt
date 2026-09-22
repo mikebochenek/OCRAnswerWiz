@@ -22,11 +22,12 @@ class GeminiService {
             Log.d("GeminiService", "Prompt query sent to Gemini API:\n$prompt")
 
             val response = generativeModel.generateContent(prompt)
+            Log.d("GeminiService", "Full response from Gemini API: $response")
             val answerText = response.text ?: "No response from Gemini"
-            Log.d("GeminiService", "Answer/explanation returned from Gemini API:\n$answerText")
+            Log.d("GeminiService", "Answer text: $answerText")
             Result.success(answerText)
         } catch (e: Exception) {
-            Log.e("GeminiService", "Error calling Gemini API", e)
+            Log.e("GeminiService", "Error calling Gemini API. Message: ${e.message}", e)
             Result.failure(handleGeminiException(e))
         }
     }
