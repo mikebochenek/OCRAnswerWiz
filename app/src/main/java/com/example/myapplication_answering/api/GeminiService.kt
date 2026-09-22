@@ -14,7 +14,7 @@ class GeminiService {
     suspend fun getAnswer(question: String, options: List<String>): Result<String> {
         return try {
             val prompt = if (options.isNotEmpty()) {
-                "Question: $question\nOptions:\n${options.joinToString("\n")}\n\nPlease provide the correct answer and a brief explanation."
+                "Question: $question\nOptions:\n${options.joinToString("\n")}\n\nPlease provide the correct answer, indicate if it's the 1st, 2nd, 3rd, or 4th option, and also a brief explanation."
             } else {
                 "Question: $question\n\nPlease provide an answer and a brief explanation."
             }
