@@ -48,18 +48,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val ocrResult = textRecognitionService.extractQuestionAndOptions(uri)
             ocrResult.onSuccess { result ->
                 _uiState.value = UiState.Success(result, null)
-                
-                // Trigger Gemini answer
-                val geminiResult = geminiService.getAnswer(result.question, result.options)
-                geminiResult.onSuccess { answer ->
-                    _uiState.value = UiState.Success(result, answer)
-                    incrementAnswerCount()
-                }.onFailure { error ->
-                    _uiState.value = UiState.Error(error.message ?: "Gemini error", result)
-                }
+                fetchGeminiAnswer(result)
             }.onFailure { error ->
                 _uiState.value = UiState.Error(error.message ?: "OCR error")
             }
+        }
+    }
+
+    fun retry() {
+        val currentState = _uiState.value
+        if (currentState is UiState.Error) {
+            val result = currentState.result
+            if (result != null) {
+                _uiState.value = UiState.Success(result, null)
+                viewModelScope.launch {
+                    fetchGeminiAnswer(result)
+                }
+            } else {
+                _imageUri.value?.let { processImage(it) }
+            }
+        } else if (currentState is UiState.Success) {
+            val result = currentState.result
+            _uiState.value = UiState.Success(result, null)
+            viewModelScope.launch {
+                fetchGeminiAnswer(result)
+            }
+        }
+    }
+
+    private suspend fun fetchGeminiAnswer(result: OcrResult) {
+        val geminiResult = geminiService.getAnswer(result.question, result.options)
+        geminiResult.onSuccess { answer ->
+            _uiState.value = UiState.Success(result, answer)
+            incrementAnswerCount()
+        }.onFailure { error ->
+            _uiState.value = UiState.Error(error.message ?: "Gemini error", result)
         }
     }
 

@@ -17,6 +17,8 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Crop
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.PhotoLibrary
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
@@ -27,6 +29,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -103,10 +106,20 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 
-    // Effect to navigate to detail pane when Gemini answer is available
+    // Effect to navigate to detail pane when Gemini answer is available or when Gemini fails for the extracted question
     LaunchedEffect(uiState) {
-        if (uiState is MainViewModel.UiState.Success && (uiState as MainViewModel.UiState.Success).geminiAnswer != null) {
-            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
+        when (val state = uiState) {
+            is MainViewModel.UiState.Success -> {
+                if (state.geminiAnswer != null) {
+                    navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
+                }
+            }
+            is MainViewModel.UiState.Error -> {
+                if (state.result != null) {
+                    navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
+                }
+            }
+            else -> {}
         }
     }
 
@@ -222,10 +235,36 @@ fun MainScreen(viewModel: MainViewModel) {
                                 ResultContent(state.result)
                             }
                             is MainViewModel.UiState.Error -> {
-                                Column {
-                                    Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
-                                    state.result?.let { ResultContent(it) }
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
+                                        Text(
+                                            text = "Error: ${state.message}",
+                                            color = MaterialTheme.colorScheme.onErrorContainer,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Button(
+                                            onClick = { viewModel.retry() },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.error
+                                            )
+                                        ) {
+                                            Icon(Icons.Rounded.Refresh, contentDescription = null)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Retry")
+                                        }
+                                    }
                                 }
+                                state.result?.let { ResultContent(it) }
                             }
                         }
                     }
@@ -261,7 +300,10 @@ fun MainScreen(viewModel: MainViewModel) {
                         when (val state = uiState) {
                             is MainViewModel.UiState.Success -> {
                                 if (state.geminiAnswer != null) {
-                                    GeminiAnswerContent(state.geminiAnswer)
+                                    GeminiAnswerContent(
+                                        answer = state.geminiAnswer,
+                                        onRetry = { viewModel.retry() }
+                                    )
                                 } else {
                                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -273,7 +315,31 @@ fun MainScreen(viewModel: MainViewModel) {
                                 }
                             }
                             is MainViewModel.UiState.Error -> {
-                                Text("Error fetching answer: ${state.message}")
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Warning,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                    Spacer(Modifier.height(16.dp))
+                                    Text(
+                                        text = "Error fetching answer:\n${state.message}",
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(Modifier.height(16.dp))
+                                    Button(onClick = { viewModel.retry() }) {
+                                        Icon(Icons.Rounded.Refresh, contentDescription = null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Retry")
+                                    }
+                                }
                             }
                             else -> {
                                 Text("Select a question to see the answer")
@@ -315,14 +381,28 @@ fun ResultContent(result: OcrResult) {
 }
 
 @Composable
-fun GeminiAnswerContent(answer: String) {
+fun GeminiAnswerContent(
+    answer: String,
+    onRetry: (() -> Unit)? = null
+) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.width(8.dp))
-            Text("AI Answer", style = MaterialTheme.typography.headlineSmall)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(8.dp))
+                Text("AI Answer", style = MaterialTheme.typography.headlineSmall)
+            }
+            if (onRetry != null) {
+                IconButton(onClick = onRetry) {
+                    Icon(Icons.Rounded.Refresh, contentDescription = "Regenerate Answer")
+                }
+            }
         }
         Spacer(Modifier.height(16.dp))
         LazyColumn {
