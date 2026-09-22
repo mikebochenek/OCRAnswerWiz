@@ -7,7 +7,7 @@ import com.google.ai.client.generativeai.type.content
 
 class GeminiService {
     private val generativeModel = GenerativeModel(
-        modelName = "gemini-3.6-flash",
+        modelName = "gemini-3.5-flash-lite",
         apiKey = BuildConfig.GEMINI_API_KEY
     )
 
