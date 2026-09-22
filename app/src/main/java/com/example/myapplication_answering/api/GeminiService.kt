@@ -26,7 +26,28 @@ class GeminiService {
             Log.d("GeminiService", "Answer/explanation returned from Gemini API:\n$answerText")
             Result.success(answerText)
         } catch (e: Exception) {
-            Result.failure(e)
+            Log.e("GeminiService", "Error calling Gemini API", e)
+            Result.failure(handleGeminiException(e))
+        }
+    }
+
+    private fun handleGeminiException(e: Exception): Exception {
+        val originalMessage = e.message ?: return e
+
+        // The SDK error message often contains the raw JSON response when it fails to parse it.
+        // We try to extract the user-friendly "message" field from it if it exists.
+        val messageRegex = """"message"\s*:\s*"([^"]+)"""".toRegex()
+        val match = messageRegex.find(originalMessage)
+
+        return if (match != null) {
+            val extractedMessage = match.groupValues[1]
+            Exception(extractedMessage, e)
+        } else if (originalMessage.contains("503") || originalMessage.contains("UNAVAILABLE")) {
+            Exception("Gemini is currently experiencing high demand (503). Please try again in a few moments.", e)
+        } else if (originalMessage.contains("MissingFieldException")) {
+            Exception("Gemini returned an unexpected response format. Please try again.", e)
+        } else {
+            e
         }
     }
 }
