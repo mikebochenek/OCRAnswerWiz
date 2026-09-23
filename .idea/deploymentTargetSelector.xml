@@ -37,10 +37,10 @@
       </SelectionState>
       <SelectionState runConfigName="ocr-app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-09-19T06:27:09.767403500Z">
+        <DropdownSelection timestamp="2026-09-23T05:57:14.296425700Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=320247142371" />
+              <DeviceId pluginId="Wireless" identifier="serviceName=adb-3C231JEHN15387-EJCc7W" />
             </handle>
           </Target>
         </DropdownSelection>
