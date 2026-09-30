@@ -1,6 +1,10 @@
 package com.example.myapplication_answering.ui.screens
 
 import android.Manifest
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.graphics.Rect
+import androidx.exifinterface.media.ExifInterface
 import android.net.Uri
 import android.os.Environment
 import androidx.activity.compose.BackHandler
@@ -80,7 +84,8 @@ fun MainScreen(viewModel: MainViewModel) {
                     cropImageOptions = CropImageOptions(
                         guidelines = CropImageView.Guidelines.ON,
                         activityTitle = "Crop Question",
-                        showProgressBar = true
+                        showProgressBar = true,
+                        initialCropWindowRectangle = getInitialCropRect(context, uri)
                     )
                 )
             )
@@ -98,7 +103,8 @@ fun MainScreen(viewModel: MainViewModel) {
                         cropImageOptions = CropImageOptions(
                             guidelines = CropImageView.Guidelines.ON,
                             activityTitle = "Crop Question",
-                            showProgressBar = true
+                            showProgressBar = true,
+                            initialCropWindowRectangle = getInitialCropRect(context, uri)
                         )
                     )
                 )
@@ -202,16 +208,19 @@ fun MainScreen(viewModel: MainViewModel) {
                             if (imageUri != null) {
                                 OutlinedButton(
                                     onClick = {
-                                        cropImageLauncher.launch(
-                                            CropImageContractOptions(
-                                                uri = imageUri,
-                                                cropImageOptions = CropImageOptions(
-                                                    guidelines = CropImageView.Guidelines.ON,
-                                                    activityTitle = "Crop Question",
-                                                    showProgressBar = true
+                                        imageUri?.let { uri ->
+                                            cropImageLauncher.launch(
+                                                CropImageContractOptions(
+                                                    uri = uri,
+                                                    cropImageOptions = CropImageOptions(
+                                                        guidelines = CropImageView.Guidelines.ON,
+                                                        activityTitle = "Crop Question",
+                                                        showProgressBar = true,
+                                                        initialCropWindowRectangle = getInitialCropRect(context, uri)
+                                                    )
                                                 )
                                             )
-                                        )
+                                        }
                                     },
                                     modifier = Modifier.weight(1f)
                                 ) {
@@ -513,5 +522,54 @@ fun MainScreenAdaptivePreview() {
                 Text("Adaptive Layout Preview (Tablet)")
             }
         }
+    }
+}
+
+private fun getInitialCropRect(context: Context, uri: Uri): Rect? {
+    return try {
+        var width = 0
+        var height = 0
+        context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeStream(inputStream, null, options)
+            width = options.outWidth
+            height = options.outHeight
+        }
+        if (width <= 0 || height <= 0) return null
+
+        try {
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                val exif = ExifInterface(inputStream)
+                val orientation = exif.getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL
+                )
+                if (orientation == ExifInterface.ORIENTATION_ROTATE_90 ||
+                    orientation == ExifInterface.ORIENTATION_ROTATE_270 ||
+                    orientation == ExifInterface.ORIENTATION_TRANSPOSE ||
+                    orientation == ExifInterface.ORIENTATION_TRANSVERSE
+                ) {
+                    val temp = width
+                    width = height
+                    height = temp
+                }
+            }
+        } catch (_: Exception) {
+            // Ignore EXIF parsing errors and proceed with unrotated dimensions
+        }
+
+        val cropHeight = height / 4
+        val cropWidth = (width * 0.9f).toInt()
+
+        val left = (width - cropWidth) / 2
+        val top = (height - cropHeight) / 2
+        val right = left + cropWidth
+        val bottom = top + cropHeight
+
+        Rect(left, top, right, bottom)
+    } catch (_: Exception) {
+        null
     }
 }
