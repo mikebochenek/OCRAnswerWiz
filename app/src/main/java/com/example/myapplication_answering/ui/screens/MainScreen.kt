@@ -48,6 +48,7 @@ import com.canhub.cropper.CropImageView
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -314,13 +315,7 @@ fun MainScreen(viewModel: MainViewModel) {
                                         onRetry = { viewModel.retry() }
                                     )
                                 } else {
-                                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            CircularProgressIndicator()
-                                            Spacer(Modifier.height(8.dp))
-                                            Text("Gemini is thinking...")
-                                        }
-                                    }
+                                    GeminiThinkingContent()
                                 }
                             }
                             is MainViewModel.UiState.Error -> {
@@ -418,6 +413,41 @@ fun GeminiAnswerContent(
             item {
                 Text(answer, style = MaterialTheme.typography.bodyLarge)
             }
+        }
+    }
+}
+
+@Composable
+fun GeminiThinkingContent() {
+    var seconds by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            seconds++
+        }
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Gemini is thinking...",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Elapsed time: ${seconds}s",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
