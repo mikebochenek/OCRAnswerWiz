@@ -9,6 +9,12 @@ import com.example.myapplication_answering.ocr.OcrResult
 import com.example.myapplication_answering.ocr.TextRecognitionService
 import android.content.Context
 import android.util.Log
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.example.myapplication_answering.worker.ImageUploadWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,7 +45,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (uri != null) {
             Log.d("MainViewModel", "Image selected/captured: $uri at timestamp: ${System.currentTimeMillis()}")
             processImage(uri)
+            scheduleImageUpload(uri)
         }
+    }
+
+    private fun scheduleImageUpload(uri: Uri) {
+        val uploadWorkRequest = OneTimeWorkRequestBuilder<ImageUploadWorker>()
+            .setInputData(workDataOf(ImageUploadWorker.KEY_IMAGE_URI to uri.toString()))
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            )
+            .build()
+
+        WorkManager.getInstance(getApplication())
+            .enqueue(uploadWorkRequest)
+
+        Log.d("MainViewModel", "Enqueued background upload work request for $uri")
     }
 
     private fun processImage(uri: Uri) {

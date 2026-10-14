@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.mlkit.text.recognition)
     implementation(libs.androidImageCropper)
     implementation(libs.generativeai)

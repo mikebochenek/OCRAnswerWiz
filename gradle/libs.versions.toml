@@ -46,6 +46,7 @@ material = "1.12.0"
 mlkitTextRecognition = "16.0.1"
 generativeai = "0.9.0"
 androidImageCropper = "4.5.0"
+workRuntime = "2.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -100,6 +101,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitTextRecognition" }
 generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
 androidImageCropper = { group = "com.github.CanHub", name = "Android-Image-Cropper", version.ref = "androidImageCropper" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
